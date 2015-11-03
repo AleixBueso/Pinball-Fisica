@@ -8,6 +8,7 @@
 #include "ModulePhysics.h"
 #include "ModuleWindow.h" 
 #include "ModulePlayer.h"
+#include "SDL\include\SDL_timer.h"
 
 #define BOUNCER_TIME 200;
 
@@ -49,7 +50,90 @@ bool ModuleSceneIntro::CleanUp()
 // Update: draw background
 update_status ModuleSceneIntro::Update()
 {
+	App->renderer->Blit(PinballMap, 0, 0);
+	
+	p2List_item<PhysBody*>* tmp_1 = shellders.getFirst();
+	while (tmp_1 != NULL)
+	{
+		if (tmp_1->data->hit_timer > 0)
+		{
+			if (SDL_TICKS_PASSED(SDL_GetTicks(), tmp_1->data->hit_timer) == false)
+			{
+				int x, y;
+				tmp_1->data->GetPosition( x, y);
+				App->renderer->Blit(tmp_1->data->texture, x, y);
+			}
 
+			else
+			{
+				tmp_1->data->hit_timer = 0;
+				App->player->score += 20;
+			}
+			
+		}
+		tmp_1 = tmp_1->next;
+	}
+
+	p2List_item<PhysBody*>* tmp_2 = triangles.getFirst();
+	while (tmp_2 != NULL)
+	{
+		if (tmp_2->data->hit_timer > 0)
+		{
+			if (SDL_TICKS_PASSED(SDL_GetTicks(), tmp_2->data->hit_timer) == false)
+			{
+				int x, y;
+				tmp_2->data->GetPosition(x, y);
+				App->renderer->Blit(tmp_2->data->texture, x, y);
+			}
+
+			else
+			{
+				tmp_2->data->hit_timer = 0;
+				App->player->score += 20;
+			}
+		
+		}
+	tmp_2 = tmp_2->next;
+	}
+
+	p2List_item<PhysBody*>* tmp_3 = pokemon.getFirst();
+	while (tmp_3 != NULL)
+	{
+		if (tmp_3->data->hit_timer > 0)
+		{
+			if (SDL_TICKS_PASSED(SDL_GetTicks(), tmp_3->data->hit_timer) == false)
+			{
+				int x, y;
+				tmp_3->data->GetPosition(x, y);
+				App->renderer->Blit(tmp_3->data->texture, x, y);
+			}
+
+			else
+			{
+				tmp_3->data->hit_timer = 0;
+				App->player->score += 100;
+			}
+			
+		}
+		tmp_3 = tmp_3->next;
+	}
+
+	if (PsyDuck->hit_timer > 0)
+	{
+		if (SDL_TICKS_PASSED(SDL_GetTicks(), PsyDuck->hit_timer) == false)
+		{
+			int x, y;
+			PsyDuck->GetPosition(x, y);
+			App->renderer->Blit(PsyDuck->texture, x, y);
+		}
+
+		else
+		{
+			PsyDuck->hit_timer = 0;
+			App->player->score += 50;
+		}
+	}
+	
 	char title[50];
 	sprintf_s(title, "Balls: %d Score: %06d", App->player->lives, App->player->score);
 	App->window->SetTitle(title);
@@ -66,8 +150,6 @@ update_status ModuleSceneIntro::Update()
 		circles.add(App->physics->CreateCircle(App->input->GetMouseX(), App->input->GetMouseY(), 16, b2_dynamicBody));
 		// TODO 8: Make sure to add yourself as collision callback to the circle you creates
 	}
-	
-	App->renderer->Blit(PinballMap, 0, 0);
 
 	return UPDATE_CONTINUE;
 }
@@ -108,6 +190,7 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 		PsyDuck->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 		//App->audio->PlayFx(side_bouncer1.fx);
 		LOG("Collision!");
+		App->player->score += 50;
 		return;
 	}
 
@@ -119,6 +202,7 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 			tmp_3->data->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 			//App->audio->PlayFx(bouncer1.fx);
 			LOG("Collision!");
+			App->player->score += 100;
 			return;
 		}
 		tmp_3 = tmp_3->next;
@@ -242,7 +326,7 @@ void ModuleSceneIntro::CreatePinball()
 	};
 	pinball.add(App->physics->CreatePinballChain(0, 0, right_triangle, 6));
 
-	int Cloyster[12] = {
+	int right_thing[12] = {
 		405, 929,
 		392, 904,
 		496, 835,
@@ -250,9 +334,9 @@ void ModuleSceneIntro::CreatePinball()
 		508, 743,
 		509, 865
 	};
-	pokemon.add(App->physics->CreatePinballChain(0, 0, Cloyster, 12))->data->listener = this;
+	pinball.add(App->physics->CreatePinballChain(0, 0, right_thing, 12));
 
-	int Slowpoke[12] = {
+	int left_thing[12] = {
 		172, 927,
 		188, 904,
 		92, 837,
@@ -260,7 +344,7 @@ void ModuleSceneIntro::CreatePinball()
 		74, 747,
 		75, 863
 	};
-	pokemon.add(App->physics->CreatePinballChain(0, 0, Slowpoke, 12))->data->listener = this;
+	pinball.add(App->physics->CreatePinballChain(0, 0, left_thing, 12));
 
 	int bar1[8] = {
 		238, 87,
@@ -278,13 +362,16 @@ void ModuleSceneIntro::CreatePinball()
 	};
 	pinball.add(App->physics->CreatePinballChain(0, 0, bar2, 8));
 
-	pinball.add(App->physics->CreateRectangle(160, 373, 36, 55, 1.2f, b2_staticBody));
-	pinball.add(App->physics->CreateRectangle(430, 373, 40, 57, 1.2f, b2_staticBody));
+	//Cloyster & Slowpoke
+	pokemon.add(App->physics->CreateRectangle(160, 373, 36, 55, 1.2f, b2_staticBody))->data->listener = this;
+	pokemon.getLast()->data->texture = App->textures->Load(""); //ASIER
+	pokemon.add(App->physics->CreateRectangle(430, 373, 40, 57, 1.2f, b2_staticBody))->data->listener = this;
+	pokemon.getLast()->data->texture = App->textures->Load(""); //ASIER
 
 	//PsyDuck
 	PsyDuck = App->physics->CreateCircle(498, 644, 65, b2_staticBody, 1.0f);
+	PsyDuck->texture = App->textures->Load(""); //ASIER
 
-	
 	int boucing_rectangle_1[8] = {
 		134, 761,
 		142, 759,
@@ -292,6 +379,7 @@ void ModuleSceneIntro::CreatePinball()
 		172, 837
 	};
 	triangles.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_1, 8, 1.0f))->data->listener=this;
+	triangles.getLast()->data->texture = App->textures->Load(""); //ASIER
 	
 
 	int boucing_rectangle_2[8] = {
@@ -301,12 +389,19 @@ void ModuleSceneIntro::CreatePinball()
 		409, 832
 	};
 	triangles.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_2, 8, 1.0f))->data->listener = this;
+	triangles.getLast()->data->texture = App->textures->Load(""); //ASIER
 
 	//Shellders
 	shellders.add(App->physics->CreateCircle(215, 255, 40, b2_staticBody, 1.0f))->data->listener = this;
+	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
 	shellders.add(App->physics->CreateCircle(291, 191, 40, b2_staticBody, 1.0f))->data->listener = this;
+	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
 	shellders.add(App->physics->CreateCircle(368, 255, 40, b2_staticBody, 1.0f))->data->listener = this;
-	shellders.add(App->physics->CreateCircle(292, 990, 5, b2_staticBody, 1.0f))->data->listener = this;
+	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
+
+
+
+	pinball.add(App->physics->CreateCircle(292, 990, 2, b2_staticBody, 1.0f));
 }
 
 // TODO 8: Now just define collision callback for the circle and play bonus_fx audio

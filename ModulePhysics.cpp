@@ -42,6 +42,7 @@ PhysBody::PhysBody()
 	listener = NULL;
 	rect.x = rect.y = rect.h = rect.w = width = height = 0;
 	type = b2_dynamicBody;
+	texture = NULL;
 
 }
 
@@ -74,6 +75,8 @@ PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type,
 	pbody->body = b;
 	pbody->width = pbody->height = radius/2;
 
+	b->SetUserData(pbody);
+
 	return pbody;
 }
 
@@ -98,6 +101,8 @@ PhysBody* ModulePhysics::CreateRectangle(int x, int y, int width, int height, fl
 	pbody->body = b;
 	pbody->width = width * 0.5f;
 	pbody->height = height * 0.5f;
+
+	b->SetUserData(pbody);
 
 	return pbody;
 }
@@ -447,34 +452,6 @@ void ModulePhysics::CreateLineJoint(PhysBody* body_1, PhysBody* body_2, int x_pi
 
 	world->CreateJoint(&def);
 }
-
-/*
-void ModulePhysics::BeginContact(b2Contact* contact) {
-
-	//check if fixture A was a ball
-	void* bodyUserData = contact->GetFixtureA()->GetBody()->GetUserData();
-	if (bodyUserData)
-		static_cast<Object*>(bodyUserData)->startContact();
-
-	//check if fixture B was a ball
-	bodyUserData = contact->GetFixtureB()->GetBody()->GetUserData();
-	if (bodyUserData)
-		static_cast<Object*>(bodyUserData)->startContact();
-}
-
-void ModulePhysics::EndContact(b2Contact* contact) {
-
-	//check if fixture A was a ball
-	void* bodyUserData = contact->GetFixtureA()->GetBody()->GetUserData();
-	if (bodyUserData)
-		static_cast<Object*>(bodyUserData)->endContact();
-
-	//check if fixture B was a ball
-	bodyUserData = contact->GetFixtureB()->GetBody()->GetUserData();
-	if (bodyUserData)
-		static_cast<Object*>(bodyUserData)->endContact();
-
-}*/
 
 // TODO 3
 

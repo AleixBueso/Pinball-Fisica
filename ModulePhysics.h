@@ -34,6 +34,7 @@ public:
 	int width, height;
 	b2Body* body;
 	Module* listener;
+	SDL_Texture* texture;
 
 	SDL_Rect rect;
 	b2BodyType type;
