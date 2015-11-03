@@ -35,6 +35,7 @@ public:
 	b2Body* body;
 	Module* listener;
 	SDL_Texture* texture;
+	uint fx;
 
 	SDL_Rect rect;
 	b2BodyType type;

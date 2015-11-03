@@ -26,6 +26,8 @@ public:
 	p2List<PhysBody*> triangles;
 	p2List<PhysBody*> pokemon;
 	
+	PhysBody* right_light;
+	PhysBody* left_light;
 	PhysBody* PsyDuck;
 	PhysBody* sensor;
 	bool sensed;

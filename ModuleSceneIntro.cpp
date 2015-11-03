@@ -29,6 +29,7 @@ bool ModuleSceneIntro::Start()
 
 	App->renderer->camera.x = App->renderer->camera.y = 0;
 
+	App->audio->PlayMusic("pinball/Tablero_Azul_Pinball.ogg", 0.0f);
 	bonus_fx = App->audio->LoadFx("pinball/bonus.wav");
 	PinballMap = App->textures->Load("pinball/bluetable_base.png");
 
@@ -89,7 +90,7 @@ update_status ModuleSceneIntro::Update()
 			else
 			{
 				tmp_2->data->hit_timer = 0;
-				App->player->score += 20;
+				App->player->score += 10;
 			}
 		
 		}
@@ -133,6 +134,29 @@ update_status ModuleSceneIntro::Update()
 			App->player->score += 50;
 		}
 	}
+
+	if (right_light->hit_timer < 0)
+	{
+		if (SDL_TICKS_PASSED(SDL_GetTicks(), right_light->hit_timer) == false)
+			App->renderer->Blit(right_light->texture, x, y);
+		else
+		{
+			right_light->hit_timer = 0;
+			App->player->score += 40;
+		}
+	}
+
+	if (left_light->hit_timer < 0)
+	{
+		if (SDL_TICKS_PASSED(SDL_GetTicks(), left_light->hit_timer) == false)
+			App->renderer->Blit(left_light->texture, x, y);
+		else
+		{
+			right_light->hit_timer = 0;
+			App->player->score += 40;
+			
+		}
+	}
 	
 	char title[50];
 	sprintf_s(title, "Balls: %d Score: %06d", App->player->lives, App->player->score);
@@ -164,7 +188,6 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 			tmp_1->data->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 			//App->audio->PlayFx(bouncer1.fx);
 			LOG("Collision!");
-			App->player->score += 20;
 			return;
 		}
 		tmp_1 = tmp_1->next;
@@ -178,7 +201,6 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 			tmp_2->data->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 			//App->audio->PlayFx(bouncer1.fx);
 			LOG("Collision!");
-			App->player->score += 30;
 			return;
 		}
 
@@ -190,7 +212,6 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 		PsyDuck->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 		//App->audio->PlayFx(side_bouncer1.fx);
 		LOG("Collision!");
-		App->player->score += 50;
 		return;
 	}
 
@@ -202,11 +223,27 @@ void ModuleSceneIntro::OnCollision(PhysBody* body1, PhysBody* body2)
 			tmp_3->data->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
 			//App->audio->PlayFx(bouncer1.fx);
 			LOG("Collision!");
-			App->player->score += 100;
 			return;
 		}
 		tmp_3 = tmp_3->next;
 	}
+
+	if (right_light == body1)
+	{
+		right_light->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
+		LOG("Collision!");
+		App->audio->PlayFx(right_light->fx);
+		return;
+	}
+
+	if (left_light == body1)
+	{
+		left_light->hit_timer = SDL_GetTicks() + BOUNCER_TIME;
+		LOG("Collision!");
+		App->audio->PlayFx(right_light->fx);
+		return;
+	}
+
 		return;
 	}
 
@@ -365,12 +402,16 @@ void ModuleSceneIntro::CreatePinball()
 	//Cloyster & Slowpoke
 	pokemon.add(App->physics->CreateRectangle(160, 373, 36, 55, 1.2f, b2_staticBody))->data->listener = this;
 	pokemon.getLast()->data->texture = App->textures->Load(""); //ASIER
+	pokemon.getLast()->data->fx = App->audio->LoadFx("");
 	pokemon.add(App->physics->CreateRectangle(430, 373, 40, 57, 1.2f, b2_staticBody))->data->listener = this;
 	pokemon.getLast()->data->texture = App->textures->Load(""); //ASIER
+	pokemon.getLast()->data->fx = App->audio->LoadFx("");
 
 	//PsyDuck
 	PsyDuck = App->physics->CreateCircle(498, 644, 65, b2_staticBody, 1.0f);
+	PsyDuck->listener = this;
 	PsyDuck->texture = App->textures->Load(""); //ASIER
+	PsyDuck->fx = App->audio->LoadFx("");
 
 	int boucing_rectangle_1[8] = {
 		134, 761,
@@ -380,6 +421,8 @@ void ModuleSceneIntro::CreatePinball()
 	};
 	triangles.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_1, 8, 1.0f))->data->listener=this;
 	triangles.getLast()->data->texture = App->textures->Load(""); //ASIER
+	triangles.getLast()->data->fx = App->audio->LoadFx("");
+
 	
 
 	int boucing_rectangle_2[8] = {
@@ -390,18 +433,45 @@ void ModuleSceneIntro::CreatePinball()
 	};
 	triangles.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_2, 8, 1.0f))->data->listener = this;
 	triangles.getLast()->data->texture = App->textures->Load(""); //ASIER
+	triangles.getLast()->data->fx = App->audio->LoadFx("");
 
 	//Shellders
 	shellders.add(App->physics->CreateCircle(215, 255, 40, b2_staticBody, 1.0f))->data->listener = this;
 	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
+	shellders.getLast()->data->fx = App->audio->LoadFx("");
 	shellders.add(App->physics->CreateCircle(291, 191, 40, b2_staticBody, 1.0f))->data->listener = this;
 	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
+	shellders.getLast()->data->fx = App->audio->LoadFx("");
 	shellders.add(App->physics->CreateCircle(368, 255, 40, b2_staticBody, 1.0f))->data->listener = this;
 	shellders.getLast()->data->texture = App->textures->Load(""); //ASIER
+	shellders.getLast()->data->fx = App->audio->LoadFx("");
 
 
 
 	pinball.add(App->physics->CreateCircle(292, 990, 2, b2_staticBody, 1.0f));
+
+	//------------------------------------------------
+	int r_l[8] = {
+		458, 536,
+		412, 512,
+		410, 530,
+		442, 549
+	};
+	right_light = App->physics->CreatePinballChain(0, 0, r_l, 8);
+	right_light->listener = this;
+	right_light->texture = App->textures->Load("");
+	right_light->fx = App->audio->LoadFx("pinball/sound3.wav");
+
+	int l_l[8] = {
+		170, 513,
+		122, 534,
+		136, 550,
+		176, 532
+	};
+	left_light = App->physics->CreatePinballChain(0, 0, r_l, 8);
+	left_light->listener = this;
+	left_light->texture = App->textures->Load("");
+	right_light->fx = App->audio->LoadFx("pinball/sound3.wav");
 }
 
 // TODO 8: Now just define collision callback for the circle and play bonus_fx audio
